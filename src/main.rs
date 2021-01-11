@@ -49,8 +49,9 @@ fn run(config: Config) ->  Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(filepath)?;
 
 
-    match &config.day[..] {
+    match config.day.as_str() {
         "day1" => day1(&contents),
+        "day2" => day2(&contents),
         _ => (),
     }
 
@@ -94,3 +95,67 @@ fn day1(contents: &str) {
 
 }
 
+fn day2(contents: &str) {
+    #[derive(Debug)]
+    struct Entry<'a>{
+        policy: (u32, u32),
+        letter: char,
+        password: &'a str,
+    }
+
+    impl Entry<'_> {
+        fn validate_password(&self) -> bool {
+            let count = self.password.matches(|ch| ch == self.letter).count();
+            //println!("{}", count);
+
+            let count = count as u32;
+            self.policy.0 <= count && count <= self.policy.1 
+        }
+    }
+
+    let mut count = 0;
+    for line in contents.lines() {
+        let mut iter = line.split_ascii_whitespace();
+
+        let mut policy: (u32, u32)  = (0,0);
+
+        if let Some(first) = iter.next() {
+            let mut char_iter = first.split("-");
+            // println!("{}", first);
+
+            let lower_bound =  char_iter.next().expect("no lower bound");
+            let upper_bound = char_iter.next().expect("no upper bound");
+            
+            // println!("{}-{}", upper_bound, lower_bound);
+
+            policy = (lower_bound.parse().unwrap(), upper_bound.parse().unwrap());
+        };
+
+        let mut letter: char = ' ';
+        if let Some(given_letter) = iter.next() {
+            let mut char_iter = given_letter.chars();
+            letter = char_iter.next().expect("no given char");
+        }
+
+        let mut password: &str = " ";
+        if let Some(pw) = iter.next() {
+            password = pw;
+        }
+
+        let entry = Entry {
+            policy,
+            letter,
+            password,
+        };
+
+        let result = entry.validate_password();
+
+        //println!("{}", result);
+
+        if result {
+            count = count + 1;
+        }
+    }
+    println!("{}", count)
+
+}
